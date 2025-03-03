@@ -16,8 +16,8 @@ func SetupRoutes(router *gin.Engine, guestHandler *handlers.GuestHandler) {
 	// Public RSVP Routes (Guests can only submit their RSVP)
 	rsvpRoutes := router.Group("/rsvp")
 	{
-		rsvpRoutes.POST("/", guestHandler.SubmitRSVP)           // Guests submit RSVP
-		rsvpRoutes.GET("/:token", guestHandler.GetGuestByToken) // Guests view RSVP details
+		rsvpRoutes.POST("/", guestHandler.SubmitRSVP)
+		rsvpRoutes.GET("/:token", guestHandler.GetGuestByToken)
 	}
 
 	// Admin Guest Management (Protected)

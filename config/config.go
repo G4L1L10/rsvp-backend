@@ -7,22 +7,31 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config struct to hold application configurations
+// Config struct holds environment variables
 type Config struct {
-	ServerPort  string
-	DatabaseURL string
+	ServerPort     string
+	AuthServiceURL string
+	DatabaseURL    string
+	SMTPUser       string
+	SMTPPassword   string
 }
 
-// LoadConfig reads environment variables and loads them into a Config struct
+// LoadConfig loads environment variables from .env file
 func LoadConfig() *Config {
-	// Load .env file (optional, but useful in development)
-	if err := godotenv.Load(); err != nil {
+	err := godotenv.Load(".env") // Force loading .env explicitly
+	if err != nil {
 		log.Println("⚠️ Warning: No .env file found, using system environment variables.")
 	}
 
+	// Debugging: Log the values being loaded
+	log.Printf("🔄 ENV: SERVER_PORT=%s, AUTH_SERVICE_URL=%s", os.Getenv("SERVER_PORT"), os.Getenv("AUTH_SERVICE_URL"))
+
 	return &Config{
-		ServerPort:  getEnv("SERVER_PORT", "8080"),
-		DatabaseURL: getEnv("DATABASE_URL", ""),
+		ServerPort:     getEnv("SERVER_PORT", "8081"),
+		AuthServiceURL: getEnv("AUTH_SERVICE_URL", ""),
+		DatabaseURL:    getEnv("DATABASE_URL", ""),
+		SMTPUser:       getEnv("SMTP_USER", ""),
+		SMTPPassword:   getEnv("SMTP_PASSWORD", ""),
 	}
 }
 
