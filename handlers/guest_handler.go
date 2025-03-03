@@ -160,3 +160,29 @@ func (h *GuestHandler) DeleteGuest(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "guest deleted successfully"})
 }
+
+// SubmitRSVP allows guests to confirm attendance using their RSVP token
+func (h *GuestHandler) SubmitRSVP(ctx *gin.Context) {
+	var req struct {
+		RSVPToken   string `json:"rsvp_token" binding:"required"`
+		RSVPStatus  string `json:"rsvp_status" binding:"required"`
+		TotalGuests int    `json:"total_guests" binding:"required,gt=0"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		log.Println("❌ Error binding RSVP request:", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update RSVP status in the database
+	err := h.Service.UpdateRSVP(req.RSVPToken, req.RSVPStatus, req.TotalGuests)
+	if err != nil {
+		log.Println("❌ Failed to update RSVP:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("✅ RSVP successfully updated for token:", req.RSVPToken)
+	ctx.JSON(http.StatusOK, gin.H{"message": "RSVP updated successfully"})
+}

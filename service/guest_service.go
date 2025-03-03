@@ -118,3 +118,24 @@ func (s *GuestService) DeleteGuest(id uuid.UUID) error {
 	}
 	return nil
 }
+
+// UpdateRSVP updates a guest's RSVP status based on their RSVP token
+func (s *GuestService) UpdateRSVP(rsvpToken, rsvpStatus string, totalGuests int) error {
+	// Fetch guest using the RSVP token
+	guest, err := s.Repo.GetGuestByToken(rsvpToken)
+	if err != nil {
+		return fmt.Errorf("failed to fetch guest: %v", err)
+	}
+
+	// Update guest details
+	guest.RSVPStatus = rsvpStatus
+	guest.TotalGuests = totalGuests
+
+	// Save updates to the database
+	err = s.Repo.UpdateGuest(guest)
+	if err != nil {
+		return fmt.Errorf("failed to update RSVP: %v", err)
+	}
+
+	return nil
+}

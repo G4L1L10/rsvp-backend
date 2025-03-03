@@ -2,24 +2,33 @@ package routes
 
 import (
 	"github.com/g4l1l10/rsvp-backend/handlers"
-	"github.com/g4l1l10/rsvp-backend/health"
+	"github.com/g4l1l10/rsvp-backend/middlewares"
 
+	"github.com/g4l1l10/rsvp-backend/health"
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRoutes registers all API endpoints
+// SetupRoutes registers API endpoints
 func SetupRoutes(router *gin.Engine, guestHandler *handlers.GuestHandler) {
-	// Register health check endpoint
+	// Health check route
 	router.GET("/status", health.HealthCheckHandler)
 
-	guestRoutes := router.Group("/guests")
+	// Public RSVP Routes (Guests can only submit their RSVP)
+	rsvpRoutes := router.Group("/rsvp")
 	{
-		guestRoutes.POST("/", guestHandler.AddGuest)
-		guestRoutes.GET("/", guestHandler.GetAllGuests)
-		guestRoutes.GET("/:id", guestHandler.GetGuestByID)
-		guestRoutes.GET("/email/:email", guestHandler.GetGuestByEmail)
-		guestRoutes.GET("/rsvp/:token", guestHandler.GetGuestByToken)
-		guestRoutes.PUT("/:id", guestHandler.UpdateGuest)
-		guestRoutes.DELETE("/:id", guestHandler.DeleteGuest)
+		rsvpRoutes.POST("/", guestHandler.SubmitRSVP)           // Guests submit RSVP
+		rsvpRoutes.GET("/:token", guestHandler.GetGuestByToken) // Guests view RSVP details
+	}
+
+	// Admin Guest Management (Protected)
+	adminRoutes := router.Group("/admin")
+	adminRoutes.Use(middlewares.AuthMiddleware()) // Require JWT authentication
+	{
+		adminRoutes.GET("/guests/", guestHandler.GetAllGuests)
+		adminRoutes.GET("/guests/:id", guestHandler.GetGuestByID)
+		adminRoutes.GET("/guests/email/:email", guestHandler.GetGuestByEmail)
+		adminRoutes.GET("/guests/rsvp/:token", guestHandler.GetGuestByToken)
+		adminRoutes.PUT("/guests/:id", guestHandler.UpdateGuest)
+		adminRoutes.DELETE("/guests/:id", guestHandler.DeleteGuest)
 	}
 }
