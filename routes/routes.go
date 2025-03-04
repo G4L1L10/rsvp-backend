@@ -24,7 +24,7 @@ func SetupRoutes(router *gin.Engine, guestHandler *handlers.GuestHandler) {
 	adminRoutes := router.Group("/admin")
 	adminRoutes.Use(middlewares.AuthMiddleware()) // Require JWT authentication
 	{
-		adminRoutes.GET("/guests/", guestHandler.GetAllGuests)
+		adminRoutes.GET("/guests", guestHandler.GetAllGuests)
 		adminRoutes.GET("/guests/:id", guestHandler.GetGuestByID)
 		adminRoutes.GET("/guests/email/:email", guestHandler.GetGuestByEmail)
 		adminRoutes.GET("/guests/rsvp/:token", guestHandler.GetGuestByToken)
