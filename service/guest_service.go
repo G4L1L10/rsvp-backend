@@ -51,6 +51,21 @@ func (s *GuestService) AddGuest(name, email, familySide string, totalGuests int)
 	return guest, nil
 }
 
+// SendInvitation sends an RSVP invitation email to the guest
+func (s *GuestService) SendInvitation(guest *models.Guest) error {
+	if guest == nil {
+		return fmt.Errorf("guest cannot be nil")
+	}
+
+	// Send the invitation email
+	err := utils.SendEmail(guest.Name, guest.Email, guest.RSVPToken)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %v", err)
+	}
+
+	return nil
+}
+
 // GetAllGuests retrieves all guests
 func (s *GuestService) GetAllGuests() ([]models.Guest, error) {
 	guests, err := s.Repo.GetAllGuests()

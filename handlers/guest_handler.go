@@ -49,6 +49,37 @@ func (h *GuestHandler) AddGuest(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, guest)
 }
 
+// SendInvite handles sending an RSVP invitation email
+func (h *GuestHandler) SendInvite(ctx *gin.Context) {
+	var req struct {
+		Name        string `json:"name" binding:"required"`
+		Email       string `json:"email" binding:"required,email"`
+		FamilySide  string `json:"family_side" binding:"required"`
+		TotalGuests int    `json:"total_guests" binding:"required,gt=0"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// ✅ Corrected: Capture both guest and error
+	guest, err := h.Service.AddGuest(req.Name, req.Email, req.FamilySide, req.TotalGuests)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store guest"})
+		return
+	}
+
+	// Send the invitation email
+	err = h.Service.SendInvitation(guest)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send invitation"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Invitation sent successfully"})
+}
+
 // GetAllGuests retrieves all guests
 func (h *GuestHandler) GetAllGuests(ctx *gin.Context) {
 	guests, err := h.Service.GetAllGuests()
