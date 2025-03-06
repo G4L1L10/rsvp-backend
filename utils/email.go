@@ -20,22 +20,24 @@ func SendEmail(guestName, guestEmail, rsvpToken string) error {
 		return fmt.Errorf("❌ SMTP configuration is missing")
 	}
 
-	// Generate RSVP Link
-	rsvpLink := fmt.Sprintf("https://rsvp.example.com?token=%s", rsvpToken)
+	// Generate RSVP Link with path parameter instead of query parameter
+	rsvpLink := fmt.Sprintf("http://localhost:5173/rsvp/%s", rsvpToken) // ✅ Fixed URL format
 
-	// Email subject and body with guest's name
+	// Email subject and HTML body with RSVP button
 	subject := "You're Invited to Our Wedding! 🎉"
 	body := fmt.Sprintf(
-		"Dear %s,\n\n"+
-			"You are invited to our wedding! 🎊\n\n"+
-			"Please click the link below to RSVP:\n%s\n\n"+
-			"We look forward to celebrating with you!\n\n"+
-			"Best regards,\nThe Wedding Team 💍",
+		"Dear %s,<br><br>"+
+			"You are invited to our wedding! 🎊<br><br>"+
+			"Please confirm your attendance by clicking the button below:<br><br>"+
+			"<a href='%s' style='display:inline-block; padding:12px 24px; font-size:16px; "+
+			"color:#fff; background-color:#3498db; text-decoration:none; border-radius:5px;'>RSVP Now</a><br><br>"+
+			"We look forward to celebrating with you!<br><br>"+
+			"Best regards,<br>The Wedding Team 💍",
 		guestName, rsvpLink,
 	)
 
-	// Format the email message
-	message := fmt.Sprintf("Subject: %s\n\n%s", subject, body)
+	// Format the email message with proper headers for HTML content
+	message := fmt.Sprintf("Subject: %s\nMIME-Version: 1.0\nContent-Type: text/html; charset=UTF-8\n\n%s", subject, body)
 
 	// Build Gmail SMTP server address
 	serverAddress := fmt.Sprintf("%s:%s", smtpHost, smtpPort)

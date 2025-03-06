@@ -50,6 +50,7 @@ func (h *GuestHandler) AddGuest(ctx *gin.Context) {
 }
 
 // SendInvite handles sending an RSVP invitation email
+// SendInvite handles sending an RSVP invitation email
 func (h *GuestHandler) SendInvite(ctx *gin.Context) {
 	var req struct {
 		Name        string `json:"name" binding:"required"`
@@ -63,14 +64,21 @@ func (h *GuestHandler) SendInvite(ctx *gin.Context) {
 		return
 	}
 
-	// ✅ Corrected: Capture both guest and error
+	// Check if guest already exists
+	existingGuest, _ := h.Service.GetGuestByEmail(req.Email)
+	if existingGuest != nil {
+		ctx.JSON(http.StatusConflict, gin.H{"error": "Guest already exists"})
+		return
+	}
+
+	// ✅ Now, we add the guest *without sending an email here*
 	guest, err := h.Service.AddGuest(req.Name, req.Email, req.FamilySide, req.TotalGuests)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to store guest"})
 		return
 	}
 
-	// Send the invitation email
+	// ✅ Email only sent here now
 	err = h.Service.SendInvitation(guest)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send invitation"})

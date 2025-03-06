@@ -23,6 +23,7 @@ func NewGuestService(repo *repository.GuestRepository) *GuestService {
 }
 
 // AddGuest validates input and creates a new guest
+// AddGuest validates input and creates a new guest
 func (s *GuestService) AddGuest(name, email, familySide string, totalGuests int) (*models.Guest, error) {
 	// Validate inputs
 	if name == "" || email == "" || familySide == "" || totalGuests <= 0 {
@@ -38,16 +39,9 @@ func (s *GuestService) AddGuest(name, email, familySide string, totalGuests int)
 		return nil, fmt.Errorf("failed to add guest: %v", err)
 	}
 
-	log.Println("📧 Sending email invitation to:", email)
+	log.Println("✅ Guest successfully added:", guest.Email)
 
-	// Send Email (Run in a goroutine to prevent blocking)
-	go func() {
-		err = utils.SendEmail(guest.Name, guest.Email, guest.RSVPToken)
-		if err != nil {
-			log.Println("⚠️ Warning: Guest added but email not sent:", err)
-		}
-	}()
-
+	// ❌ Removed automatic email sending here
 	return guest, nil
 }
 
