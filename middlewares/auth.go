@@ -11,12 +11,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Load the authentication service URL from environment variables
-var AuthServiceURL = os.Getenv("AUTH_SERVICE_URL")
-
 // AuthMiddleware validates the JWT token by calling the authentication service
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		// ✅ Fetch AUTH_SERVICE_URL inside the function to ensure it is read at runtime
+		authServiceURL := os.Getenv("AUTH_SERVICE_URL")
+		if authServiceURL == "" {
+			log.Println("❌ AUTH_SERVICE_URL is not set")
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "AUTH_SERVICE_URL is not set"})
+			ctx.Abort()
+			return
+		}
+
 		// Get token from the Authorization header
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
@@ -29,7 +35,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Validate the token with the authentication service
-		valid, err := validateTokenWithAuthService(token)
+		valid, err := validateTokenWithAuthService(authServiceURL, token)
 		if err != nil || !valid {
 			log.Printf("❌ Token validation failed: %v", err)
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
@@ -43,15 +49,15 @@ func AuthMiddleware() gin.HandlerFunc {
 }
 
 // validateTokenWithAuthService sends the token to the authentication service for validation
-func validateTokenWithAuthService(token string) (bool, error) {
-	// Ensure AuthServiceURL is set
-	if AuthServiceURL == "" {
-		log.Println("❌ AUTH_SERVICE_URL is not set")
-		return false, fmt.Errorf("AUTH_SERVICE_URL is not set")
+func validateTokenWithAuthService(authServiceURL, token string) (bool, error) {
+	// ✅ Ensure the URL is not empty
+	if authServiceURL == "" {
+		log.Println("❌ AUTH_SERVICE_URL is empty in validateTokenWithAuthService")
+		return false, fmt.Errorf("AUTH_SERVICE_URL is empty")
 	}
 
-	// Define the validation URL (assumes authentication service has /auth/validate endpoint)
-	url := fmt.Sprintf("%s/auth/validate", AuthServiceURL)
+	// Define the validation URL
+	url := fmt.Sprintf("%s/auth/validate", authServiceURL)
 
 	// Create the request with the token in the Authorization header
 	req, err := http.NewRequest("GET", url, nil)
